@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.Uniswap [color='container'] > div > div:nth-child(3) {
+    position: relative;
+}
+/* https://github.com/Uniswap/widgets/issues/584    */

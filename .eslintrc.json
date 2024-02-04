@@ -1,0 +1,16 @@
+{
+    "settings": {
+      "react": {
+        "version": "detect" 
+      }
+    },
+    "rules": {
+      "react/no-typos": "off",
+      "no-unused-expressions": "off", 
+      "react-hooks/rules-of-hooks": "off", 
+      "import/first": "off",
+      "@typescript-eslint/ban-types": "off",
+      "react-hooks/exhaustive-deps": "off"
+    }
+  }
+  
