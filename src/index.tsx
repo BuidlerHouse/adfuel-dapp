@@ -7,11 +7,24 @@ import './index.css';
 import { WagmiConfig, createClient, chain } from 'wagmi';
 import { ConnectKitProvider, getDefaultClient } from 'connectkit';
 
+// https://github.com/Uniswap/widgets/issues/627#issuecomment-1930627298
+declare global {
+  interface Window {
+    Browser: {
+      T: () => void;
+    };
+  }
+}
+
+window.Browser = {
+  T: () => {}
+};
+
 const client = createClient(
   getDefaultClient({
     appName: 'AdFuel',
     infuraId: process.env.REACT_APP_INFURA_ID,
-    chains: [chain.polygonMumbai, chain.polygon],
+    chains: [chain.polygon],
   })
 );
 
