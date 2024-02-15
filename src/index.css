@@ -6,3 +6,7 @@
     position: relative;
 }
 /* https://github.com/Uniswap/widgets/issues/584    */
+
+.video-react-big-play-button-center {
+    display: none !important;
+  }

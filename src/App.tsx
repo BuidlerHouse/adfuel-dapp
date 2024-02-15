@@ -1,14 +1,17 @@
 import { ConnectKitButton } from 'connectkit';
 import { ethers } from 'ethers';
 import { useSigner, useAccount, useProvider } from 'wagmi';
-import React, { useState, useEffect } from 'react';
-import { Theme, SwapWidget } from '@adfuel/uniswap-widgets';
+import React, { useState, useEffect, useRef } from 'react';
+import { Theme, SwapWidget, InjectedCallbackContext } from '@adfuel/uniswap-widgets';
 import { Web3Provider } from '@ethersproject/providers'
 import '@uniswap/widgets/fonts.css';
+import AdsVideo from './AdsVideo'
+
 function App() {
   const theme: Theme = {
     accent: '#ff3131'
   }
+  const adsVideoRef = useRef() as any;
   const [defaultInputTokenAddress, setDefaultInputTokenAddress] = useState('NATIVE');
   const [defaultOutputTokenAddress, setDefaultOutputTokenAddress] = useState('0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889');
   const [provider, setProvider] = useState<Web3Provider | undefined>()
@@ -33,6 +36,7 @@ function App() {
   You should instead pass useSigner<JsonRpcSigner>().data?.provider to reflect the user's connected wallet.
   */
   useEffect(() => {
+    // adsVideoRef.current.play()
     if (provider) {
       const getNetwork = async () => {
         const network = await provider.getNetwork();
@@ -45,8 +49,13 @@ function App() {
     }
   }, [provider]);
 
+  const handleVideoEnd = () => {
+    console.log('Video ended in App');
+}
+
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-r from-darkStart to-darkEnd text-white">
+    <div className="flex flex-col min-h-screen"> 
+    {/*bg-gradient-to-r from-darkStart to-darkEnd text-white*/}
        {/* Navbar */}
         <nav className="bg-black p-4">
           <div className="flex justify-between items-center">
@@ -58,17 +67,27 @@ function App() {
         {/* Main Content */}
         <div className="flex-grow p-4 flex justify-center mt-4">
           <div className="Uniswap">
-            <SwapWidget 
-            provider={provider} 
-            theme={theme} 
-            defaultInputTokenAddress='NATIVE' 
-            defaultOutputTokenAddress={defaultOutputTokenAddress} 
-            defaultInputAmount={0.001}
-            jsonRpcUrlMap={jsonRpcUrlMap}
-            hideConnectionUI={true}
-            />
+          <InjectedCallbackContext.Provider value={{
+              onConfirmSwap(event) {
+                console.log('onConfirmSwap', event)
+                return {
+                  interrupt: true,
+                }
+              },
+            }}>
+              <SwapWidget 
+              provider={provider} 
+              theme={theme} 
+              defaultInputTokenAddress='NATIVE' 
+              defaultOutputTokenAddress={defaultOutputTokenAddress} 
+              defaultInputAmount={0.001}
+              jsonRpcUrlMap={jsonRpcUrlMap}
+              hideConnectionUI={true}
+              />
+            </InjectedCallbackContext.Provider> 
           </div>
-        </div>
+          {/* <AdsVideo ref={adsVideoRef} src={"ads.mov"}  onEnd={handleVideoEnd} />         */}
+          </div>
         {/* Main Content end */}
       </div>
       );
