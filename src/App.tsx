@@ -9,9 +9,10 @@ import AdsVideo from './AdsVideo'
 
 function App() {
   const theme: Theme = {
-    accent: '#ff3131'
+    accent: '#BA020A' //'#ff3131'
   }
-  const [showAdsVideo, setShowAdsVideo] = useState(false); // 新增的状态
+  const [token, setToken] = useState('' as string);
+  const [showAdsVideo, setShowAdsVideo] = useState(false); 
   const adsVideoRef = useRef() as any;
   const [defaultInputTokenAddress, setDefaultInputTokenAddress] = useState('NATIVE');
   const [defaultOutputTokenAddress, setDefaultOutputTokenAddress] = useState('0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889');
@@ -40,7 +41,7 @@ function App() {
   useEffect(() => {
     if (provider) {
       // adsVideoRef.current.play();
-      setShowAdsVideo(true);
+      // setShowAdsVideo(true);
       const getNetwork = async () => {
         const network = await provider.getNetwork();
         if (network.chainId === 137) {
@@ -54,6 +55,8 @@ function App() {
 
   const handleVideoEnd = (token: string) => {
     console.log('Video ended in App');
+    setToken(token);
+    setShowAdsVideo(false);
   }
 
   const handleRightClick = (event: React.MouseEvent) => {
@@ -74,7 +77,7 @@ function App() {
         {/* Main Content */}
         <div className="flex-grow p-4 flex justify-center mt-4">
           <div className="Uniswap">
-          {/* <InjectedCallbackContext.Provider value={{
+          <InjectedCallbackContext.Provider value={{
               onConfirmSwap(event) {
                 console.log('onConfirmSwap', event)
                 return {
@@ -83,6 +86,7 @@ function App() {
               },
             }}>
               <SwapWidget 
+              className='mb-4'
               provider={provider} 
               theme={theme} 
               defaultInputTokenAddress='NATIVE' 
@@ -91,13 +95,30 @@ function App() {
               jsonRpcUrlMap={jsonRpcUrlMap}
               hideConnectionUI={true}
               />
-            </InjectedCallbackContext.Provider>  */}
+              <div className="notification text-white bg-lightRed" onClick={() => {
+                if(!token) {
+                  setShowAdsVideo(true);
+                } else {
+                  window.open("https://axieinfinity.com/", '_blank');
+                }
+              }}>
+                {!token ? 'View ads to waive gas fee' :    <div style={{ display: 'flex', alignItems: 'center',  justifyContent: 'center' }}>
+                <img src="29056010_0.webp" alt="Axie Infinity Logo" style={{ 
+                    height: '30px', // Logo高度
+                    marginRight: '10px', // 与文字的间隔
+                    borderRadius: '50%', // Logo圆角
+                }} />
+                Sponsored by Axie Infinity
+                </div>}
+            </div>
+            </InjectedCallbackContext.Provider> 
           </div>
-          <div className="adsContainer">
-            { showAdsVideo && <AdsVideo additionalText={"Start your adventure with free starter Axies each with unique abilities and playstyles."} sponsorText={"Sponsored by Axie Infinity"} url={"https://axieinfinity.com/"} ref={adsVideoRef} src={"ads.mov"}  onEnd={handleVideoEnd} />  }    
-          </div>
+          { showAdsVideo && <div className="adsContainer">
+            <AdsVideo additionalText={"Start your adventure with free starter Axies each with unique abilities and playstyles."} sponsorText={"Sponsored by Axie Infinity"} url={"https://axieinfinity.com/"} ref={adsVideoRef} src={"ads.mov"}  onEnd={handleVideoEnd} /> 
+          </div>}
           </div>
         {/* Main Content end */}
+        <footer className="footer">Copyright © 2024 AdFuel All Rights Reserved</footer>
       </div>
       );
 }

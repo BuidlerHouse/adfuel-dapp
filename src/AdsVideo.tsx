@@ -125,10 +125,9 @@ class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
         const url = this.props.url || "https://axieinfinity.com/";
 
         return (
-            <a href={url} target="_blank" rel="noopener noreferrer">
+            <a href={url} target="_blank" rel="noopener noreferrer"                 className="player" >
 
             <Player
-
                 ref={this.player as React.RefObject<PlayerReference>}
                 src={src}
                 playsInline={true}

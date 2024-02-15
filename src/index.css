@@ -24,15 +24,42 @@
     max-width: 900px; 
     height: auto; 
     margin: 0 auto;
+    position: absolute;
+    top: 150px; 
+    left: 0; 
+    right: 0; 
+    bottom: 0;
+    z-index: 1;
 }
 
 .sponsor-text {
     font-weight: bold;
     font-family: Arial, sans-serif;
-    font-size: 16px; /* 改变字体大小 */
+    font-size: 16px;
 }
 
 .sponsor-ad-text {
     font-family: Arial, sans-serif;
-    font-size: 12px; /* 改变字体大小 */
+    font-size: 12px; 
+}
+
+.footer {
+    color: gray; 
+    position: absolute; 
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
+}
+
+.player {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.notification {
+    color: white; /* 设置字体颜色为白色 */
+    border-radius: 10px; /* 设置边框半径为10px */
+    padding: 10px; /* 设置内边距为10px */
+    margin-top: 10px; /* 设置上边距为10px */
+    text-align: center; /* 设置文本对齐为居中 */
+    cursor: pointer; /* 设置光标为指针 */
 }
