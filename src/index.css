@@ -25,3 +25,14 @@
     height: auto; 
     margin: 0 auto;
 }
+
+.sponsor-text {
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+    font-size: 16px; /* 改变字体大小 */
+}
+
+.sponsor-ad-text {
+    font-family: Arial, sans-serif;
+    font-size: 12px; /* 改变字体大小 */
+}

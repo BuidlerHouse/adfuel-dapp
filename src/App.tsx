@@ -94,7 +94,7 @@ function App() {
             </InjectedCallbackContext.Provider>  */}
           </div>
           <div className="adsContainer">
-            { showAdsVideo && <AdsVideo ref={adsVideoRef} src={"ads.mov"}  onEnd={handleVideoEnd} />  }    
+            { showAdsVideo && <AdsVideo additionalText={"Start your adventure with free starter Axies each with unique abilities and playstyles."} sponsorText={"Sponsored by Axie Infinity"} url={"https://axieinfinity.com/"} ref={adsVideoRef} src={"ads.mov"}  onEnd={handleVideoEnd} />  }    
           </div>
           </div>
         {/* Main Content end */}
