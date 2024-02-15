@@ -52,7 +52,7 @@ function App() {
     }
   }, [provider]);
 
-  const handleVideoEnd = () => {
+  const handleVideoEnd = (token: string) => {
     console.log('Video ended in App');
   }
 
@@ -93,7 +93,9 @@ function App() {
               />
             </InjectedCallbackContext.Provider>  */}
           </div>
-          { showAdsVideo && <AdsVideo ref={adsVideoRef} src={"ads.mov"}  onEnd={handleVideoEnd} />  }       
+          <div className="adsContainer">
+            { showAdsVideo && <AdsVideo ref={adsVideoRef} src={"ads.mov"}  onEnd={handleVideoEnd} />  }    
+          </div>
           </div>
         {/* Main Content end */}
       </div>

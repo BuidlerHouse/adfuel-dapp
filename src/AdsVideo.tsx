@@ -5,7 +5,7 @@ import 'video-react/dist/video-react.css';
 
 interface AdsVideoProps {
     src: string;
-    onEnd: () => void; // Callback function to be called when the video ends
+    onEnd: (token: string) => void; // Callback function to be called when the video ends
 }
 
 interface AdsVideoState {
@@ -14,6 +14,7 @@ interface AdsVideoState {
     playing: boolean;
     verified: boolean;
     startTime: number;
+    token: string;
 }
 
 class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
@@ -27,7 +28,8 @@ class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
             counter: 0,
             countdown: 0,
             playing: false,
-            verified: false
+            verified: false,
+            token: ""
         };
     }
 
@@ -50,7 +52,7 @@ class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
                 if(elapsedTime < (duration-2) * 1000) {
                     return
                 }
-                this.props.onEnd();
+                this.props.onEnd(this.state.token);
             }
             
         }
@@ -88,8 +90,9 @@ class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
         }
     }
 
-    handleSuccess = () => {
-        console.log('Turnstile success');
+    handleSuccess = (token: string) => {
+        console.log('Turnstile success:', token);
+        this.setState({ token });
         this.play();
     }
 
@@ -98,12 +101,15 @@ class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
         const src = this.props.src || "ads.mov";
         return (
             <Player
+
                 ref={this.player as React.RefObject<PlayerReference>}
                 src={src}
                 playsInline={true}
                 preload={"auto"}
                 autoPlay={false}
                 poster='banner.png'
+                fluid={true}
+                muted={true}
             >
                 {/* Disable the big play button by setting its prop to false */}
                 <BigPlayButton position="center" />
