@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Player, ControlBar, BigPlayButton, LoadingSpinner, Shortcut, PlayerReference } from 'video-react';
+import { Turnstile } from '@marsidev/react-turnstile';
 import 'video-react/dist/video-react.css';
 
 interface AdsVideoProps {
@@ -11,6 +12,7 @@ interface AdsVideoState {
     counter: number;
     countdown: number;
     playing: boolean;
+    verified: boolean;
     startTime: number;
 }
 
@@ -24,7 +26,8 @@ class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
             startTime: 0,
             counter: 0,
             countdown: 0,
-            playing: false
+            playing: false,
+            verified: false
         };
     }
 
@@ -55,16 +58,16 @@ class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
     
     componentDidMount() {
         if (this.player.current) {
-            this.player.current.subscribeToStateChange(this.handleStateChange.bind(this));
-            // this.play();
         } else {
             console.log('Player not found');
         }
     }
     
     play() {
+        this.setState({ playing: true, startTime: Date.now(), verified: true});
+        console.log('Call Play');
         this.startCountdown();
-        this.setState({ playing: true, startTime: Date.now()});
+        this.player.current.subscribeToStateChange(this.handleStateChange.bind(this));
         this.player.current.play();
     }
 
@@ -74,9 +77,6 @@ class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
             {
                 const remainingTime = Math.floor(this.player.current.getState().player.duration - this.player.current.getState().player.currentTime);
                 this.setState({ countdown: remainingTime });
-                if (this.state.countdown <= 0) {
-                    this.stopCountdown();
-                }
             }
         }, 1000);
     }
@@ -88,6 +88,12 @@ class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
         }
     }
 
+    handleSuccess = () => {
+        console.log('Turnstile success');
+        this.play();
+    }
+
+
     render() {
         const src = this.props.src || "ads.mov";
         return (
@@ -96,7 +102,8 @@ class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
                 src={src}
                 playsInline={true}
                 preload={"auto"}
-                autoPlay={true}
+                autoPlay={false}
+                poster='banner.png'
             >
                 {/* Disable the big play button by setting its prop to false */}
                 <BigPlayButton position="center" />
@@ -124,6 +131,14 @@ class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
                         {this.state.countdown}
                     </div>
                 )}
+                {!this.state.verified && (
+                    <Turnstile
+                        className='turnstile'
+                        siteKey='0x4AAAAAAAQOibHgLITTAGU8'
+                        onSuccess={this.handleSuccess}
+                    />
+                )}
+                
             </Player>
         );
     }

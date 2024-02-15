@@ -10,3 +10,11 @@
 .video-react-big-play-button-center {
     display: none !important;
   }
+
+  .turnstile {
+    position: absolute;
+    top: 70%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10000;
+}

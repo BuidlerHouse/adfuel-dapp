@@ -11,6 +11,7 @@ function App() {
   const theme: Theme = {
     accent: '#ff3131'
   }
+  const [showAdsVideo, setShowAdsVideo] = useState(false); // 新增的状态
   const adsVideoRef = useRef() as any;
   const [defaultInputTokenAddress, setDefaultInputTokenAddress] = useState('NATIVE');
   const [defaultOutputTokenAddress, setDefaultOutputTokenAddress] = useState('0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889');
@@ -38,7 +39,8 @@ function App() {
   */
   useEffect(() => {
     if (provider) {
-      adsVideoRef.current.play();
+      // adsVideoRef.current.play();
+      setShowAdsVideo(true);
       const getNetwork = async () => {
         const network = await provider.getNetwork();
         if (network.chainId === 137) {
@@ -91,7 +93,7 @@ function App() {
               />
             </InjectedCallbackContext.Provider>  */}
           </div>
-          <AdsVideo ref={adsVideoRef} src={"ads.mov"}  onEnd={handleVideoEnd} />        
+          { showAdsVideo && <AdsVideo ref={adsVideoRef} src={"ads.mov"}  onEnd={handleVideoEnd} />  }       
           </div>
         {/* Main Content end */}
       </div>
