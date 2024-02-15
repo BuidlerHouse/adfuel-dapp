@@ -21,6 +21,7 @@ function App() {
     137: [`https://polygon-mainnet.infura.io/v3/${process.env.REACT_APP_INFURA_ID}`], // Polygon Mainnet
     80001: [`https://polygon-mumbai.infura.io/v3/${process.env.REACT_APP_INFURA_ID}`] // Polygon Mumbai Testnet
   }
+  
   useEffect(() => {
     if (!connector) {
       const infuraProvider = new ethers.providers.JsonRpcProvider(`https://polygon-mainnet.infura.io/v3/${process.env.REACT_APP_INFURA_ID}`);
@@ -36,8 +37,8 @@ function App() {
   You should instead pass useSigner<JsonRpcSigner>().data?.provider to reflect the user's connected wallet.
   */
   useEffect(() => {
-    // adsVideoRef.current.play()
     if (provider) {
+      adsVideoRef.current.play();
       const getNetwork = async () => {
         const network = await provider.getNetwork();
         if (network.chainId === 137) {
@@ -51,10 +52,14 @@ function App() {
 
   const handleVideoEnd = () => {
     console.log('Video ended in App');
-}
+  }
+
+  const handleRightClick = (event: React.MouseEvent) => {
+    // event.preventDefault();
+  }
 
   return (
-    <div className="flex flex-col min-h-screen"> 
+    <div className="flex flex-col min-h-screen" onContextMenu={handleRightClick}> 
     {/*bg-gradient-to-r from-darkStart to-darkEnd text-white*/}
        {/* Navbar */}
         <nav className="bg-black p-4">
@@ -67,7 +72,7 @@ function App() {
         {/* Main Content */}
         <div className="flex-grow p-4 flex justify-center mt-4">
           <div className="Uniswap">
-          <InjectedCallbackContext.Provider value={{
+          {/* <InjectedCallbackContext.Provider value={{
               onConfirmSwap(event) {
                 console.log('onConfirmSwap', event)
                 return {
@@ -84,9 +89,9 @@ function App() {
               jsonRpcUrlMap={jsonRpcUrlMap}
               hideConnectionUI={true}
               />
-            </InjectedCallbackContext.Provider> 
+            </InjectedCallbackContext.Provider>  */}
           </div>
-          {/* <AdsVideo ref={adsVideoRef} src={"ads.mov"}  onEnd={handleVideoEnd} />         */}
+          <AdsVideo ref={adsVideoRef} src={"ads.mov"}  onEnd={handleVideoEnd} />        
           </div>
         {/* Main Content end */}
       </div>

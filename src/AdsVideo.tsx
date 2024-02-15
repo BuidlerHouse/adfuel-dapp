@@ -11,6 +11,7 @@ interface AdsVideoState {
     counter: number;
     countdown: number;
     playing: boolean;
+    startTime: number;
 }
 
 class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
@@ -20,6 +21,7 @@ class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
     constructor(props: AdsVideoProps) {
         super(props);
         this.state = {
+            startTime: 0,
             counter: 0,
             countdown: 0,
             playing: false
@@ -27,6 +29,7 @@ class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
     }
 
     handleStateChange(state: any, prevState: any) {
+        this.setState({ counter: this.state.counter + 1});
         if (!state.paused && prevState.paused) {
             console.log('Started');
         } else if (state.ended) {
@@ -34,7 +37,16 @@ class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
             {
                 this.setState({ playing: false });
                 this.stopCountdown();
-                console.log('Ended');
+                console.log('Ended', this.state.counter);
+                const endTime = Date.now();
+                if(this.state.counter < 40) {
+                    return;
+                }
+                const elapsedTime = endTime - this.state.startTime;
+                const duration = this.player.current.getState().player.duration;
+                if(elapsedTime < (duration-2) * 1000) {
+                    return
+                }
                 this.props.onEnd();
             }
             
@@ -52,13 +64,9 @@ class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
     
     play() {
         this.startCountdown();
-        this.setState({ playing: true });
+        this.setState({ playing: true, startTime: Date.now()});
         this.player.current.play();
     }
-
-    // pause() {
-    //     this.player.current.pause();
-    // }
 
     startCountdown() {
         this.countdownInterval = setInterval(() => {
@@ -88,6 +96,7 @@ class AdsVideo extends Component<AdsVideoProps, AdsVideoState> {
                 src={src}
                 playsInline={true}
                 preload={"auto"}
+                autoPlay={true}
             >
                 {/* Disable the big play button by setting its prop to false */}
                 <BigPlayButton position="center" />
