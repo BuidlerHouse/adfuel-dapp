@@ -63,3 +63,7 @@
     text-align: center; /* 设置文本对齐为居中 */
     cursor: pointer; /* 设置光标为指针 */
 }
+
+.text-black {
+    color: black;
+}

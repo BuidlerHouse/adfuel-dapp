@@ -4,29 +4,28 @@ import { useSigner, useAccount, useProvider } from 'wagmi';
 import React, { useState, useEffect, useRef } from 'react';
 import { Theme, SwapWidget, InjectedCallbackContext } from '@adfuel/uniswap-widgets';
 import { Web3Provider } from '@ethersproject/providers'
-import '@uniswap/widgets/fonts.css';
 import AdsVideo from './AdsVideo'
+import '@uniswap/widgets/fonts.css';
 
 function App() {
   const theme: Theme = {
     accent: '#BA020A' //'#ff3131'
   }
-  const [token, setToken] = useState('' as string);
+  const [token, setToken] = useState('1' as string);
   const [showAdsVideo, setShowAdsVideo] = useState(false); 
   const adsVideoRef = useRef() as any;
-  const [defaultInputTokenAddress, setDefaultInputTokenAddress] = useState('NATIVE');
-  const [defaultOutputTokenAddress, setDefaultOutputTokenAddress] = useState('0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889');
+  const [defaultInputTokenAddress, setDefaultInputTokenAddress] = useState('0xc2132D05D31c914a87C6611C10748AEb04B58e8F');
+  const [defaultOutputTokenAddress, setDefaultOutputTokenAddress] = useState('0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270');
   const [provider, setProvider] = useState<Web3Provider | undefined>()
   const { connector } = useAccount()
+  const rpcEndPoint = `https://polygon-mainnet.g.alchemy.com/v2/${process.env.REACT_APP_ALCHEMY_ID}`;
   const jsonRpcUrlMap = {
-    1: [`https://mainnet.infura.io/v3/${process.env.REACT_APP_INFURA_ID}`], // Ethereum Mainnet
-    137: [`https://polygon-mainnet.infura.io/v3/${process.env.REACT_APP_INFURA_ID}`], // Polygon Mainnet
-    80001: [`https://polygon-mumbai.infura.io/v3/${process.env.REACT_APP_INFURA_ID}`] // Polygon Mumbai Testnet
+    137: [rpcEndPoint] // [`https://polygon-mainnet.infura.io/v3/${process.env.REACT_APP_INFURA_ID}`], // Polygon Mainnet
   }
   
   useEffect(() => {
     if (!connector) {
-      const infuraProvider = new ethers.providers.JsonRpcProvider(`https://polygon-mainnet.infura.io/v3/${process.env.REACT_APP_INFURA_ID}`);
+      const infuraProvider = new ethers.providers.JsonRpcProvider(rpcEndPoint);
       return () => setProvider(infuraProvider as Web3Provider)
     }
     connector.getProvider().then((provider) => {
@@ -40,13 +39,11 @@ function App() {
   */
   useEffect(() => {
     if (provider) {
-      // adsVideoRef.current.play();
-      // setShowAdsVideo(true);
       const getNetwork = async () => {
         const network = await provider.getNetwork();
         if (network.chainId === 137) {
-          setDefaultInputTokenAddress('NATIVE');
-          setDefaultOutputTokenAddress('0xc2132D05D31c914a87C6611C10748AEb04B58e8F');
+          setDefaultOutputTokenAddress('0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270');
+          setDefaultInputTokenAddress('0xc2132D05D31c914a87C6611C10748AEb04B58e8F');
         }
       };
       getNetwork();
@@ -59,6 +56,13 @@ function App() {
     setShowAdsVideo(false);
   }
 
+  const handleSwap = (event: any): { interrupt: boolean } => {
+    const tokenIn = event.trade.swaps[0]["inputAmount"]["currency"];
+    return {
+        interrupt: false,
+    }
+  }
+
   const handleRightClick = (event: React.MouseEvent) => {
     // event.preventDefault();
   }
@@ -67,9 +71,9 @@ function App() {
     <div className="flex flex-col min-h-screen" onContextMenu={handleRightClick}> 
     {/*bg-gradient-to-r from-darkStart to-darkEnd text-white*/}
        {/* Navbar */}
-        <nav className="bg-black p-4">
+        <nav className="p-4">
           <div className="flex justify-between items-center">
-          <img src="banner.png" alt="Banner" className="text-xl font-bold" style={{height: '50px'}} />          
+          <img src="banner2.png" alt="Banner" className="text-xl font-bold" style={{height: '50px'}} />          
           <ConnectKitButton />
           </div>
         </nav>
@@ -79,10 +83,8 @@ function App() {
           <div className="Uniswap">
           <InjectedCallbackContext.Provider value={{
               onConfirmSwap(event) {
-                console.log('onConfirmSwap', event)
-                return {
-                  interrupt: true,
-                }
+                console.log('onConfirmSwap', event);
+                return handleSwap(event);
               },
             }}>
               <SwapWidget 
@@ -94,19 +96,20 @@ function App() {
               defaultInputAmount={0.001}
               jsonRpcUrlMap={jsonRpcUrlMap}
               hideConnectionUI={true}
+              routerUrl='https://api.uniswap.org/v1/'
               />
-              <div className="notification text-white bg-lightRed" onClick={() => {
+              <div className="notification text-black" onClick={() => {
                 if(!token) {
                   setShowAdsVideo(true);
                 } else {
                   window.open("https://axieinfinity.com/", '_blank');
                 }
               }}>
-                {!token ? 'View ads to waive gas fee' :    <div style={{ display: 'flex', alignItems: 'center',  justifyContent: 'center' }}>
+                {!token ? '' : <div style={{ display: 'flex', alignItems: 'center',  justifyContent: 'center' }}>
                 <img src="29056010_0.webp" alt="Axie Infinity Logo" style={{ 
-                    height: '30px', // Logo高度
-                    marginRight: '10px', // 与文字的间隔
-                    borderRadius: '50%', // Logo圆角
+                    height: '30px',
+                    marginRight: '10px',
+                    borderRadius: '50%',
                 }} />
                 Sponsored by Axie Infinity
                 </div>}

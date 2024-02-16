@@ -23,7 +23,8 @@ window.Browser = {
 const client = createClient(
   getDefaultClient({
     appName: 'AdFuel',
-    infuraId: process.env.REACT_APP_INFURA_ID,
+    // infuraId: process.env.REACT_APP_INFURA_ID,
+    alchemyId: process.env.REACT_APP_ALCHEMY_ID,
     chains: [chain.polygon],
   })
 );
