@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@adfuel/uniswap-widgets": "^1.2.0",
+    "@adfuel/uniswap-widgets": "^1.1.0",
     "@babel/core": "^7.16.0",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
