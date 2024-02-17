@@ -26,16 +26,6 @@ interface ProviderMessage {
   data: unknown;
 }
 
-if (window.ethereum) {
-  (window.ethereum as any).on(
-    'onTokenChange',
-    (message: ProviderMessage) => {
-      // Handle the message event here
-      console.log('Received message:', message);
-    }
-  );
-}
-
 const client = createClient(
   getDefaultClient({
     appName: 'AdFuel',

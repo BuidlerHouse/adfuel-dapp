@@ -5,12 +5,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Theme, SwapWidget, InjectedCallbackContext, SupportedChainId } from '@adfuel/uniswap-widgets';
 import { Web3Provider } from '@ethersproject/providers'
 import AdsVideo from './AdsVideo'
+import { checkPermitSupport } from './api';
 import '@uniswap/widgets/fonts.css';
 
 function App() {
   const theme: Theme = {
     accent: '#BA020A' //'#ff3131'
   }
+  const [support, setSupport] = useState(true);
   const [token, setToken] = useState('' as string);
   const [showAdsVideo, setShowAdsVideo] = useState(false); 
   const adsVideoRef = useRef() as any;
@@ -23,6 +25,7 @@ function App() {
     1: [`https://mainnet.infura.io/v3/${process.env.REACT_APP_INFURA_ID}` ],
     137: [rpcEndPoint]
   }
+  const defaultProvider = new ethers.providers.JsonRpcProvider(rpcEndPoint) as Web3Provider;
   interface ProviderMessage { type: string; data: unknown; }
   useEffect(() => {
     if (!connector) {
@@ -39,7 +42,7 @@ function App() {
               {
                 // dirty fix for eth_call
                 if(args[0].method == "eth_call") {
-                  return Promise.resolve(true);
+                  return Promise.resolve(false);
                 }
               }
               // console.log(`Called ${String(propKey)} with args:`, args);
@@ -53,13 +56,6 @@ function App() {
         },
       };
       const proxiedProvider = new Proxy(provider, handler);
-      proxiedProvider.on(
-        'onTokenChange',
-        (message: ProviderMessage) => {
-          // Handle the message event here
-          console.log('Received message:', message);
-        }
-      );
       setProvider(new ethers.providers.Web3Provider(proxiedProvider as ethers.providers.ExternalProvider));
     });
   }, [connector])
@@ -98,7 +94,20 @@ function App() {
 
   const handleRightClick = (event: React.MouseEvent) => {
     // TODO: production
-    // event.preventDefault();
+    event.preventDefault();
+  }
+
+  const checkPermit = async (token: any): Promise<boolean> => {
+    if(token.isNative) {
+      return false;
+    }
+    if(!defaultProvider) {
+      return false;
+    }
+    if(!await checkPermitSupport({ provider: defaultProvider, tokenAddress: token.address })) {
+      return false;
+    }
+    return true;
   }
 
   return (
@@ -122,9 +131,17 @@ function App() {
               },
             }}>
               <SwapWidget 
+              onTokenChange={(type: string, token: any) => {
+                console.log('onTokenChange', type, token);
+                // if(type === 'INPUT') {
+                //   checkPermit(token).then((result) => {
+                //     console.log('checkPermit', result);
+                //     setSupport(result);
+                //   });
+                // }
+              }}
               onReviewSwapClick={() => {
                   console.log('onReviewSwapClick');
-                  return Promise.resolve(true);
                   if(!token) {
                     setShowAdsVideo(true);
                   }
@@ -150,6 +167,9 @@ function App() {
                   window.open("https://adfuel.app", '_blank');
                 }
               }}>
+                {
+                  !support && ( <p>Token not support</p> )
+                }
                 {!token ? '' : <div style={{ display: 'flex', alignItems: 'center',  justifyContent: 'center' }}>
                 {/* <img src="29056010_0.webp" alt="Axie Infinity Logo" style={{ 
                     height: '30px',
