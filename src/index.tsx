@@ -20,6 +20,22 @@ window.Browser = {
   T: () => {}
 };
 
+// Subscribe to messages
+interface ProviderMessage {
+  type: string;
+  data: unknown;
+}
+
+if (window.ethereum) {
+  (window.ethereum as any).on(
+    'onTokenChange',
+    (message: ProviderMessage) => {
+      // Handle the message event here
+      console.log('Received message:', message);
+    }
+  );
+}
+
 const client = createClient(
   getDefaultClient({
     appName: 'AdFuel',

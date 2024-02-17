@@ -11,7 +11,7 @@ function App() {
   const theme: Theme = {
     accent: '#BA020A' //'#ff3131'
   }
-  const [token, setToken] = useState('1' as string);
+  const [token, setToken] = useState('' as string);
   const [showAdsVideo, setShowAdsVideo] = useState(false); 
   const adsVideoRef = useRef() as any;
   const [defaultInputTokenAddress, setDefaultInputTokenAddress] = useState('0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'); // 0xc2132D05D31c914a87C6611C10748AEb04B58e8F
@@ -20,7 +20,7 @@ function App() {
   const { connector } = useAccount()
   const rpcEndPoint = `https://polygon-mainnet.infura.io/v3/${process.env.REACT_APP_INFURA_ID}` // `https://polygon-mainnet.g.alchemy.com/v2/${process.env.REACT_APP_ALCHEMY_ID}`;
   const jsonRpcUrlMap = {
-    1: [rpcEndPoint],
+    1: [`https://mainnet.infura.io/v3/${process.env.REACT_APP_INFURA_ID}` ],
     137: [rpcEndPoint]
   }
   interface ProviderMessage { type: string; data: unknown; }
@@ -29,9 +29,39 @@ function App() {
       const infuraProvider = new ethers.providers.JsonRpcProvider(rpcEndPoint);
       return () => setProvider(infuraProvider as Web3Provider)
     }
-    connector.getProvider().then((provider) => {
-      setProvider(new Web3Provider(provider))
-    })
+    connector.getProvider().then((provider: any) => {
+      const handler = {
+        get(target: any, propKey: string | symbol, receiver: any) {
+          const origMethod = target[propKey];
+          if (typeof origMethod === 'function') {
+            return function(...args: any[]) {
+              if(String(propKey) == "request")
+              {
+                // dirty fix for eth_call
+                if(args[0].method == "eth_call") {
+                  return Promise.resolve(true);
+                }
+              }
+              // console.log(`Called ${String(propKey)} with args:`, args);
+              const result = origMethod.apply(target, args);
+              // console.log(`Result of ${String(propKey)}:`, result);
+              return result;
+            };
+          } else {
+            return origMethod;
+          }
+        },
+      };
+      const proxiedProvider = new Proxy(provider, handler);
+      proxiedProvider.on(
+        'onTokenChange',
+        (message: ProviderMessage) => {
+          // Handle the message event here
+          console.log('Received message:', message);
+        }
+      );
+      setProvider(new ethers.providers.Web3Provider(proxiedProvider as ethers.providers.ExternalProvider));
+    });
   }, [connector])
   
   /*
@@ -59,12 +89,15 @@ function App() {
 
   const handleSwap = (event: any): { interrupt: boolean } => {
     const tokenIn = event.trade.swaps[0]["inputAmount"]["currency"];
+    console.log(tokenIn)
+
     return {
         interrupt: true,
     }
   }
 
   const handleRightClick = (event: React.MouseEvent) => {
+    // TODO: production
     // event.preventDefault();
   }
 
@@ -89,16 +122,20 @@ function App() {
               },
             }}>
               <SwapWidget 
-              // onReviewSwapClick={() => {
-              //     console.log('onReviewSwapClick');
-              //     return Promise.resolve(true);
-              // }}
+              onReviewSwapClick={() => {
+                  console.log('onReviewSwapClick');
+                  return Promise.resolve(true);
+                  if(!token) {
+                    setShowAdsVideo(true);
+                  }
+                  return Promise.resolve(true);
+              }}
               className='mb-4'
               provider={provider} 
               theme={theme} 
               defaultInputTokenAddress={defaultInputTokenAddress}
               defaultOutputTokenAddress={defaultOutputTokenAddress} 
-              defaultInputAmount={0.001}
+              defaultInputAmount={0.1}
               // defaultChainId={SupportedChainId.POLYGON}
               jsonRpcUrlMap={jsonRpcUrlMap}
               hideConnectionUI={true}
@@ -108,8 +145,9 @@ function App() {
               <div className="notification text-black" onClick={() => {
                 if(!token) {
                   setShowAdsVideo(true);
-                } else {
-                  window.open("https://axieinfinity.com/", '_blank');
+                } 
+                else {
+                  window.open("https://adfuel.app", '_blank');
                 }
               }}>
                 {!token ? '' : <div style={{ display: 'flex', alignItems: 'center',  justifyContent: 'center' }}>
@@ -124,7 +162,7 @@ function App() {
             </InjectedCallbackContext.Provider> 
           </div>
           { showAdsVideo && <div className="adsContainer">
-            <AdsVideo additionalText={"Start your adventure with free starter Axies each with unique abilities and playstyles."} sponsorText={"Sponsored by Axie Infinity"} url={"https://axieinfinity.com/"} ref={adsVideoRef} src={"ads.mov"}  onEnd={handleVideoEnd} /> 
+            <AdsVideo additionalText={"Start your adventure with free starter Axies each with unique abilities and playstyles."} sponsorText={"Sponsored by Axie Infinity"} url={"https://adfuel.app"} ref={adsVideoRef} src={"ads.mov"}  onEnd={handleVideoEnd} /> 
           </div>}
           </div>
         {/* Main Content end */}
