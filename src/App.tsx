@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Theme, SwapWidget, InjectedCallbackContext, SupportedChainId } from '@adfuel/uniswap-widgets';
 import { Web3Provider } from '@ethersproject/providers'
 import AdsVideo from './AdsVideo'
-import { checkPermitSupport, checkAllowance } from './api';
+import { checkPermitSupport, checkAllowance, signPermit } from './api';
 import '@uniswap/widgets/fonts.css';
 
 function App() {
@@ -13,18 +13,20 @@ function App() {
     accent: '#BA020A' //'#ff3131'
   }
   const [support, setSupport] = useState(true);
-  const [token, setToken] = useState('' as string);
+  const [token, setToken] = useState('1' as string);
   const [showAdsVideo, setShowAdsVideo] = useState(false); 
   const adsVideoRef = useRef() as any;
   const [defaultInputTokenAddress, setDefaultInputTokenAddress] = useState('0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'); // 0xc2132D05D31c914a87C6611C10748AEb04B58e8F
   const [defaultOutputTokenAddress, setDefaultOutputTokenAddress] = useState('0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270');
   const [provider, setProvider] = useState<Web3Provider | undefined>()
   const { connector } = useAccount()
+  const { data: signer } = useSigner();
   const rpcEndPoint = `https://polygon-mainnet.infura.io/v3/${process.env.REACT_APP_INFURA_ID}` // `https://polygon-mainnet.g.alchemy.com/v2/${process.env.REACT_APP_ALCHEMY_ID}`;
   const jsonRpcUrlMap = {
     1: [`https://mainnet.infura.io/v3/${process.env.REACT_APP_INFURA_ID}` ],
     137: [rpcEndPoint]
   }
+  const { address, isConnecting, isDisconnected } = useAccount();
   const defaultProvider = new ethers.providers.JsonRpcProvider(rpcEndPoint) as Web3Provider;
   interface ProviderMessage { type: string; data: unknown; }
   useEffect(() => {
@@ -77,7 +79,7 @@ function App() {
   //   }
   // }, [provider]);
 
-  const handleVideoEnd = (token: string) => {
+  const handleVideoEnd = async (token: string) => {
     console.log('Video ended in App');
     setToken(token);
     setShowAdsVideo(false);
@@ -85,7 +87,24 @@ function App() {
 
   const handleSwap = (event: any): { interrupt: boolean } => {
     const tokenIn = event.trade.swaps[0]["inputAmount"]["currency"];
-    console.log(tokenIn)
+    const value = event.trade.swaps[0]["inputAmount"]["numerator"][0].toString();
+    
+    console.log(tokenIn);
+    if(!support) {
+      return {
+        interrupt: true,
+      }
+    }
+    let tokenAddress = tokenIn.address;
+    if(tokenIn.tokenInfo) {
+      tokenAddress = tokenIn.tokenInfo.address;
+    }
+    const deadline = Math.floor(Date.now() / 1000) + 3600;
+    const handleSignPermit = async () => {
+      const result = await signPermit(await connector?.getSigner(), defaultProvider, tokenAddress, address as string, value, deadline.toString());
+      console.log('signPermit', result);
+    };
+    handleSignPermit();
 
     return {
         interrupt: true,
@@ -138,6 +157,7 @@ function App() {
               onTokenChange={(type: string, token: any) => {
                 console.log('onTokenChange', type, token);
                 if(type === 'INPUT') {
+                  setSupport(true);
                   // checkAllowance({ provider: defaultProvider, tokenAddress: token.address })
                   //   .then((result) => {
                   //     console.log('checkAllowance', result);
@@ -151,7 +171,7 @@ function App() {
               }}
               onReviewSwapClick={() => {
                   console.log('onReviewSwapClick');
-                  if(!token) {
+                  if(!token && support) {
                     setShowAdsVideo(true);
                   }
                   return Promise.resolve(true);
