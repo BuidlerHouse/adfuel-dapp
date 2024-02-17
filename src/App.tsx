@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Theme, SwapWidget, InjectedCallbackContext, SupportedChainId } from '@adfuel/uniswap-widgets';
 import { Web3Provider } from '@ethersproject/providers'
 import AdsVideo from './AdsVideo'
-import { checkPermitSupport } from './api';
+import { checkPermitSupport, checkAllowance } from './api';
 import '@uniswap/widgets/fonts.css';
 
 function App() {
@@ -64,18 +64,18 @@ function App() {
   When using wagmi@v0.11, useProvider() will return the fallback provider, not the wallet-connected provider. 
   You should instead pass useSigner<JsonRpcSigner>().data?.provider to reflect the user's connected wallet.
   */
-  useEffect(() => {
-    if (provider) {
-      const getNetwork = async () => {
-        const network = await provider.getNetwork();
-        if (network.chainId === 137) {
-          setDefaultInputTokenAddress('0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174');
-          setDefaultOutputTokenAddress('0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270');
-        }
-      };
-      getNetwork();
-    }
-  }, [provider]);
+  // useEffect(() => {
+  //   if (provider) {
+  //     const getNetwork = async () => {
+  //       const network = await provider.getNetwork();
+  //       if (network.chainId === 137) {
+  //         setDefaultInputTokenAddress('0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174');
+  //         setDefaultOutputTokenAddress('0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270');
+  //       }
+  //     };
+  //     getNetwork();
+  //   }
+  // }, [provider]);
 
   const handleVideoEnd = (token: string) => {
     console.log('Video ended in App');
@@ -94,7 +94,7 @@ function App() {
 
   const handleRightClick = (event: React.MouseEvent) => {
     // TODO: production
-    event.preventDefault();
+    // event.preventDefault();
   }
 
   const checkPermit = async (token: any): Promise<boolean> => {
@@ -103,6 +103,10 @@ function App() {
     }
     if(!defaultProvider) {
       return false;
+    }
+    let tokenAddress = token.address;
+    if(token.tokenInfo) {
+      tokenAddress = token.tokenInfo.address;
     }
     if(!await checkPermitSupport({ provider: defaultProvider, tokenAddress: token.address })) {
       return false;
@@ -133,12 +137,17 @@ function App() {
               <SwapWidget 
               onTokenChange={(type: string, token: any) => {
                 console.log('onTokenChange', type, token);
-                // if(type === 'INPUT') {
-                //   checkPermit(token).then((result) => {
-                //     console.log('checkPermit', result);
-                //     setSupport(result);
-                //   });
-                // }
+                if(type === 'INPUT') {
+                  // checkAllowance({ provider: defaultProvider, tokenAddress: token.address })
+                  //   .then((result) => {
+                  //     console.log('checkAllowance', result);
+                  //   });
+                  checkPermit(token).then((result) => {
+                    console.log('checkPermit', result);
+                    setSupport(result);
+                  });
+                  checkAllowance
+                }
               }}
               onReviewSwapClick={() => {
                   console.log('onReviewSwapClick');
@@ -159,6 +168,9 @@ function App() {
               brandedFooter={false}
               routerUrl='https://api.uniswap.org/v1/'
               />
+              {
+                !support && ( <p className="notification" style={{ fontFamily: 'Arial, sans-serif', color: '#808080' }}>Token not supported</p> )
+              }
               <div className="notification text-black" onClick={() => {
                 if(!token) {
                   setShowAdsVideo(true);
@@ -167,9 +179,6 @@ function App() {
                   window.open("https://adfuel.app", '_blank');
                 }
               }}>
-                {
-                  !support && ( <p>Token not support</p> )
-                }
                 {!token ? '' : <div style={{ display: 'flex', alignItems: 'center',  justifyContent: 'center' }}>
                 {/* <img src="29056010_0.webp" alt="Axie Infinity Logo" style={{ 
                     height: '30px',
