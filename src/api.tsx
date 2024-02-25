@@ -167,7 +167,7 @@ export async function signPermit(signer: any, provider: ethers.providers.Web3Pro
           cfToken: token
       };
       console.log(transactionData);
-      const url = process.env.API_URL ?? 'http://127.0.0.1:5000/execute';
+      const url = 'https://beta-api.adfuel.app/execute' // process.env.API_URL ?? 'http://127.0.0.1:5000/execute';
       const response = await fetch(url, {
           method: 'POST',
           headers: {
