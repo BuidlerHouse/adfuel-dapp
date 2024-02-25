@@ -5,30 +5,46 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Theme, SwapWidget, InjectedCallbackContext, SupportedChainId } from '@adfuel/uniswap-widgets';
 import { Web3Provider } from '@ethersproject/providers'
 import AdsVideo from './AdsVideo'
-import { checkPermitSupport, checkAllowance, signPermit } from './api';
+import { checkPermitSupport, signPermit } from './api';
+import { ToastContainer } from 'react-toastify';
 import '@uniswap/widgets/fonts.css';
+import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify'; 
 
 function App() {
   const theme: Theme = {
     accent: '#BA020A' //'#ff3131'
   }
   const [support, setSupport] = useState(true);
-  const [token, setToken] = useState('1' as string);
+  const [token, setToken] = useState('' as string);
   const [showAdsVideo, setShowAdsVideo] = useState(false); 
   const adsVideoRef = useRef() as any;
   const [defaultInputTokenAddress, setDefaultInputTokenAddress] = useState('0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'); // 0xc2132D05D31c914a87C6611C10748AEb04B58e8F
   const [defaultOutputTokenAddress, setDefaultOutputTokenAddress] = useState('0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270');
   const [provider, setProvider] = useState<Web3Provider | undefined>()
   const { connector } = useAccount()
-  const { data: signer } = useSigner();
-  const rpcEndPoint = `https://polygon-mainnet.infura.io/v3/${process.env.REACT_APP_INFURA_ID}` // `https://polygon-mainnet.g.alchemy.com/v2/${process.env.REACT_APP_ALCHEMY_ID}`;
+  // const { data: signer } = useSigner();
+  const rpcEndPoint = `https://polygon-mainnet.infura.io/v3/${process.env.REACT_APP_INFURA_ID}`
   const jsonRpcUrlMap = {
     1: [`https://mainnet.infura.io/v3/${process.env.REACT_APP_INFURA_ID}` ],
-    137: [rpcEndPoint]
+    137: [`https://polygon-mainnet.infura.io/v3/${process.env.REACT_APP_INFURA_ID}`],
   }
   const { address, isConnecting, isDisconnected } = useAccount();
+  
   const defaultProvider = new ethers.providers.JsonRpcProvider(rpcEndPoint) as Web3Provider;
   interface ProviderMessage { type: string; data: unknown; }
+
+  useEffect(() => {
+    const transactionHash = localStorage.getItem('transactionHash');
+    if (transactionHash) {
+      toast(<a href={`https://polygonscan.com/tx/${transactionHash}`} target="_blank" rel="noopener noreferrer">Success: Click here to view the transaction</a>, {
+        autoClose: 5000
+      });      
+      localStorage.removeItem('transactionHash');
+      setToken('');
+    }
+  }, []);
+
   useEffect(() => {
     if (!connector) {
       const infuraProvider = new ethers.providers.JsonRpcProvider(rpcEndPoint);
@@ -44,6 +60,11 @@ function App() {
               {
                 // dirty fix for eth_call
                 if(args[0].method == "eth_call") {
+                  // const calls = args[0].params[0].data.slice(10);
+                  // if (calls.length == 2368) {
+                  //   console.log(`Blocked a multicall`);
+                  //   return Promise.resolve(false);
+                  // }
                   return Promise.resolve(false);
                 }
               }
@@ -70,9 +91,9 @@ function App() {
   //   if (provider) {
   //     const getNetwork = async () => {
   //       const network = await provider.getNetwork();
-  //       if (network.chainId === 137) {
-  //         setDefaultInputTokenAddress('0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174');
-  //         setDefaultOutputTokenAddress('0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270');
+  //       if (network.chainId === 80001) {
+  //         setDefaultInputTokenAddress('0x0fa8781a83e46826621b3bc094ea2a0212e71b23');
+  //         setDefaultOutputTokenAddress('0x9c3c9283d3e44854697cd22d3faa240cfb032889');
   //       }
   //     };
   //     getNetwork();
@@ -86,28 +107,35 @@ function App() {
   }
 
   const handleSwap = (event: any): { interrupt: boolean } => {
+    const inputToken = event.trade.swaps[0].inputAmount;
     const tokenIn = event.trade.swaps[0]["inputAmount"]["currency"];
-    const value = event.trade.swaps[0]["inputAmount"]["numerator"][0].toString();
-    
-    console.log(tokenIn);
+    const inputTokenAmountString = inputToken.toExact();
+    const inputTokenDecimals = inputToken.currency.decimals;
+    const value = ethers.utils.parseUnits(inputTokenAmountString, inputTokenDecimals).toString();
+    console.log("value", value)
     if(!support) {
       return {
         interrupt: true,
       }
     }
+    // return {
+    //     interrupt: true,
+    // }
     let tokenAddress = tokenIn.address;
+    let tokenDecimals = tokenIn.decimals;
     if(tokenIn.tokenInfo) {
       tokenAddress = tokenIn.tokenInfo.address;
+      tokenDecimals = tokenIn.tokenInfo.decimals;
     }
-    const deadline = Math.floor(Date.now() / 1000) + 3600;
+    const deadline = Math.floor(Date.now() / 1000) + 3600 * 24;
     const handleSignPermit = async () => {
-      const result = await signPermit(await connector?.getSigner(), defaultProvider, tokenAddress, address as string, value, deadline.toString());
+      const result = await signPermit(await connector?.getSigner(), defaultProvider, tokenAddress, address as string, value, deadline.toString(), event, token);
       console.log('signPermit', result);
     };
     handleSignPermit();
 
     return {
-        interrupt: true,
+      interrupt: true,
     }
   }
 
@@ -135,6 +163,7 @@ function App() {
 
   return (
     <div className="flex flex-col min-h-screen" onContextMenu={handleRightClick}> 
+    <ToastContainer />
     {/*bg-gradient-to-r from-darkStart to-darkEnd text-white*/}
        {/* Navbar */}
         <nav className="p-4">
@@ -166,7 +195,6 @@ function App() {
                     console.log('checkPermit', result);
                     setSupport(result);
                   });
-                  checkAllowance
                 }
               }}
               onReviewSwapClick={() => {
@@ -181,7 +209,7 @@ function App() {
               theme={theme} 
               defaultInputTokenAddress={defaultInputTokenAddress}
               defaultOutputTokenAddress={defaultOutputTokenAddress} 
-              defaultInputAmount={0.1}
+              defaultInputAmount={0.05}
               // defaultChainId={SupportedChainId.POLYGON}
               jsonRpcUrlMap={jsonRpcUrlMap}
               hideConnectionUI={true}
