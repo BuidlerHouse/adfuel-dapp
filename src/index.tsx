@@ -6,6 +6,7 @@ import './index.css';
 import 'video-react/dist/video-react.css';
 import { WagmiConfig, createClient, chain } from 'wagmi';
 import { ConnectKitProvider, getDefaultClient } from 'connectkit';
+import * as amplitude from '@amplitude/analytics-browser';
 
 // https://github.com/Uniswap/widgets/issues/627#issuecomment-1930627298
 declare global {
@@ -38,6 +39,7 @@ const client = createClient(
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
+const eventProperties = {};
 root.render(
   // <React.StrictMode>
     <WagmiConfig client={client}>

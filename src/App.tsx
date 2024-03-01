@@ -10,8 +10,10 @@ import { ToastContainer } from 'react-toastify';
 import '@uniswap/widgets/fonts.css';
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify'; 
+import * as amplitude from '@amplitude/analytics-browser';
 
 function App() {
+  amplitude.init('bfdd1c4dc915d14de04630bc0a6903af');
   const theme: Theme = {
     accent: '#BA020A' //'#ff3131'
   }
@@ -22,7 +24,17 @@ function App() {
   const [defaultInputTokenAddress, setDefaultInputTokenAddress] = useState('0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'); // 0xc2132D05D31c914a87C6611C10748AEb04B58e8F
   const [defaultOutputTokenAddress, setDefaultOutputTokenAddress] = useState('0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270');
   const [provider, setProvider] = useState<Web3Provider | undefined>()
-  const { connector } = useAccount()
+  const { connector } =  useAccount({
+    onConnect: ({ address, connector, isReconnected }) => {
+      console.log('Connected', { address, connector, isReconnected })
+      amplitude.track('Wallet Connected', { address, isReconnected });
+    },
+    onDisconnect: () => {
+      console.log('Disconnected')
+      amplitude.track('Wallet Disconnected');
+    },
+   }
+  )
   // const { data: signer } = useSigner();
   const rpcEndPoint = `https://polygon-mainnet.infura.io/v3/${process.env.REACT_APP_INFURA_ID}`
   const jsonRpcUrlMap = {
@@ -102,6 +114,7 @@ function App() {
 
   const handleVideoEnd = async (token: string) => {
     console.log('Video ended in App');
+    amplitude.track('Ads Ended', {});
     setToken(token);
     setShowAdsVideo(false);
   }
@@ -129,11 +142,11 @@ function App() {
     }
     const deadline = Math.floor(Date.now() / 1000) + 3600 * 24;
     const handleSignPermit = async () => {
+      amplitude.track('Sign Start', {});
       const result = await signPermit(await connector?.getSigner(), defaultProvider, tokenAddress, address as string, value, deadline.toString(), event, token);
       console.log('signPermit', result);
     };
     handleSignPermit();
-
     return {
       interrupt: true,
     }
@@ -200,6 +213,7 @@ function App() {
               onReviewSwapClick={() => {
                   console.log('onReviewSwapClick');
                   if(!token && support) {
+                    amplitude.track('Ads Start', {});
                     setShowAdsVideo(true);
                   }
                   return Promise.resolve(true);
@@ -245,7 +259,7 @@ function App() {
         {/* Main Content end */}
         <footer className="footer">Copyright © 2024 AdFuel All Rights Reserved</footer>
       </div>
-      );
+    );
 }
 
 export default App;
